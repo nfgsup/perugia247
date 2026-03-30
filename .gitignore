@@ -1,6 +1,5 @@
 # Credenziali e secrets
 firebase-config.json
-config.js
 .env
 .env.local
 .env.*.local
