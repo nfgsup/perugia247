@@ -43,8 +43,21 @@
                 <h2>Nuovo Articolo</h2>
                 <form id="articleForm">
                     <input type="text" id="articleTitle" placeholder="Titolo articolo" required>
+                    <input type="text" id="articleSubtitle" placeholder="Sottotitolo (opzionale)">
                     <input type="text" id="articleAuthor" placeholder="Firma dell'autore" required>
-                    <textarea id="articleContent" placeholder="Contenuto articolo..." rows="10" required></textarea>
+
+                    <div class="editor-toolbar" id="editorToolbar">
+                        <button type="button" data-command="bold"><strong>B</strong></button>
+                        <button type="button" data-command="italic"><em>I</em></button>
+                        <button type="button" data-command="underline"><u>U</u></button>
+                        <button type="button" data-command="insertUnorderedList">• Lista</button>
+                        <button type="button" data-command="insertOrderedList">1. Lista</button>
+                        <button type="button" data-command="formatBlock" data-value="h3">Titolo</button>
+                        <button type="button" data-command="formatBlock" data-value="blockquote">Citazione</button>
+                        <button type="button" data-command="createLink">Link</button>
+                        <button type="button" id="clearFormatBtn">Pulisci</button>
+                    </div>
+                    <div id="articleContent" class="editor-content" contenteditable="true" data-placeholder="Contenuto articolo..."></div>
                     
                     <div class="form-group">
                         <label for="articleFile">Allega file (immagini, PDF, ecc):</label>
@@ -73,10 +86,11 @@
 
         <!-- Article Detail Modal -->
         <div id="articleDetailModal" class="modal">
-            <div class="modal-content-large">
+            <div class="modal-content-full">
                 <span class="close">&times;</span>
                 <article id="articleDetail" class="article-full">
                     <h2 id="detailTitle"></h2>
+                    <h3 id="detailSubtitle" class="article-subtitle"></h3>
                     <div class="article-meta">
                         <span id="detailAuthor"></span>
                         <span id="detailDate"></span>

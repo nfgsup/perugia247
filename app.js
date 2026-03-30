@@ -37,6 +37,7 @@ const articlesList = document.getElementById('articlesList');
 document.addEventListener('DOMContentLoaded', () => {
     loadFirebaseConfig();
     setupEventListeners();
+    setupEditorToolbar();
 });
 
 // Carica configurazione Firebase
@@ -200,17 +201,27 @@ async function handleCreateArticle(e) {
     }
 
     const title = document.getElementById('articleTitle').value;
+    const subtitle = document.getElementById('articleSubtitle').value;
     const author = document.getElementById('articleAuthor').value;
-    const content = document.getElementById('articleContent').value;
+    const contentEditor = document.getElementById('articleContent');
+    const contentHtml = contentEditor.innerHTML.trim();
+    const contentText = contentEditor.innerText.trim();
     const fileInput = document.getElementById('articleFile');
+
+    if (!contentText) {
+        showMessage('articleError', 'Inserisci il contenuto dell\'articolo');
+        return;
+    }
 
     try {
         showMessage('articleSuccess', 'Pubblicazione in corso...');
 
         const articleData = {
             title: title,
+            subtitle: subtitle,
             author: author,
-            content: content,
+            content: contentText,
+            contentHtml: contentHtml,
             createdBy: currentUser.email,
             createdAt: new Date().toISOString(),
             attachmentUrl: null,
@@ -273,6 +284,7 @@ async function handleCreateArticle(e) {
 
         showMessage('articleSuccess', 'Articolo pubblicato con successo!');
         articleForm.reset();
+        contentEditor.innerHTML = '';
         closeModal(articleModal);
         loadArticles();
     } catch (error) {
@@ -325,15 +337,17 @@ function createArticleCard(article) {
     const date = new Date(article.createdAt);
     const formattedDate = date.toLocaleDateString('it-IT');
 
-    const preview = article.content.substring(0, 100) + '...';
+    const plainContent = article.contentText || article.content || stripHtml(article.contentHtml || '');
+    const preview = plainContent.length > 150 ? `${plainContent.substring(0, 150)}...` : plainContent;
 
     card.innerHTML = `
         <h3>${escapeHtml(article.title)}</h3>
+        ${article.subtitle ? `<p class="article-subtitle">${escapeHtml(article.subtitle)}</p>` : ''}
         <div class="article-meta">
             <span><strong>Di:</strong> ${escapeHtml(article.author)}</span>
             <span>${formattedDate}</span>
         </div>
-        <p class="article-preview">${escapeHtml(article.content.substring(0, 150))}</p>
+        <p class="article-preview">${escapeHtml(preview)}</p>
         <button class="btn btn-primary" onclick="viewArticle('${article.id}')">Leggi Tutto</button>
     `;
 
@@ -361,9 +375,18 @@ async function viewArticle(articleId) {
         });
 
         document.getElementById('detailTitle').textContent = article.title;
+        const subtitleElement = document.getElementById('detailSubtitle');
+        subtitleElement.textContent = article.subtitle || '';
+        subtitleElement.style.display = article.subtitle ? 'block' : 'none';
         document.getElementById('detailAuthor').innerHTML = `<strong>Autore:</strong> ${escapeHtml(article.author)}`;
         document.getElementById('detailDate').textContent = formattedDate;
-        document.getElementById('detailContent').textContent = article.content;
+
+        const detailContent = document.getElementById('detailContent');
+        if (article.contentHtml) {
+            detailContent.innerHTML = sanitizeHtml(article.contentHtml);
+        } else {
+            detailContent.textContent = article.content || '';
+        }
 
         // Mostra allegato se presente
         const attachmentDiv = document.getElementById('detailAttachment');
@@ -392,6 +415,53 @@ async function viewArticle(articleId) {
     } catch (error) {
         console.error('View article error:', error);
         alert('Errore nel caricamento dell\'articolo');
+    }
+}
+
+function setupEditorToolbar() {
+    const editor = document.getElementById('articleContent');
+    const toolbar = document.getElementById('editorToolbar');
+
+    if (!editor || !toolbar) {
+        return;
+    }
+
+    toolbar.addEventListener('click', (event) => {
+        const button = event.target.closest('button');
+        if (!button) {
+            return;
+        }
+
+        const command = button.dataset.command;
+        if (!command) {
+            return;
+        }
+
+        event.preventDefault();
+        editor.focus();
+
+        if (command === 'createLink') {
+            const url = prompt('Inserisci URL del link:');
+            if (url) {
+                document.execCommand('createLink', false, url);
+            }
+            return;
+        }
+
+        if (command === 'formatBlock') {
+            document.execCommand(command, false, button.dataset.value || 'p');
+            return;
+        }
+
+        document.execCommand(command, false, null);
+    });
+
+    const clearButton = document.getElementById('clearFormatBtn');
+    if (clearButton) {
+        clearButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            editor.innerText = editor.innerText;
+        });
     }
 }
 
@@ -510,4 +580,49 @@ function escapeHtml(text) {
         "'": '&#039;'
     };
     return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+function stripHtml(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div.textContent || div.innerText || '';
+}
+
+function sanitizeHtml(inputHtml) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(inputHtml, 'text/html');
+    const allowedTags = new Set(['P', 'BR', 'STRONG', 'B', 'EM', 'I', 'U', 'UL', 'OL', 'LI', 'H3', 'BLOCKQUOTE', 'A']);
+
+    const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_ELEMENT, null);
+    const nodes = [];
+    while (walker.nextNode()) {
+        nodes.push(walker.currentNode);
+    }
+
+    nodes.forEach((node) => {
+        if (!allowedTags.has(node.tagName)) {
+            const textNode = doc.createTextNode(node.textContent || '');
+            node.parentNode.replaceChild(textNode, node);
+            return;
+        }
+
+        if (node.tagName === 'A') {
+            const href = node.getAttribute('href') || '';
+            if (!href.startsWith('http://') && !href.startsWith('https://')) {
+                node.removeAttribute('href');
+            }
+            node.setAttribute('target', '_blank');
+            node.setAttribute('rel', 'noopener noreferrer');
+        }
+
+        const attrs = [...node.attributes];
+        attrs.forEach((attr) => {
+            if (node.tagName === 'A' && ['href', 'target', 'rel'].includes(attr.name)) {
+                return;
+            }
+            node.removeAttribute(attr.name);
+        });
+    });
+
+    return doc.body.innerHTML;
 }
