@@ -1,0 +1,32 @@
+# Credenziali e secrets
+firebase-config.json
+config.js
+.env
+.env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Production build
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Cache
+.cache/
+.parcel-cache/

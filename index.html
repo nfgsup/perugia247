@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perugia247 - News</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="container">
+                <div class="navbar-brand">
+                    <h1 class="logo">Perugia247</h1>
+                </div>
+                <div class="navbar-menu">
+                    <button id="loginBtn" class="btn btn-primary">Login</button>
+                    <button id="newArticleBtn" class="btn btn-success" style="display:none;">Nuovo Articolo</button>
+                    <button id="logoutBtn" class="btn btn-danger" style="display:none;">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Login Modal -->
+        <div id="loginModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Accedi a Perugia247</h2>
+                <form id="loginForm">
+                    <input type="text" id="username" placeholder="Username" required>
+                    <input type="password" id="password" placeholder="Password" required>
+                    <button type="submit" class="btn btn-primary">Accedi</button>
+                </form>
+                <div id="loginError" class="error-message" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- Nuovo Articolo Modal -->
+        <div id="articleModal" class="modal">
+            <div class="modal-content-large">
+                <span class="close">&times;</span>
+                <h2>Nuovo Articolo</h2>
+                <form id="articleForm">
+                    <input type="text" id="articleTitle" placeholder="Titolo articolo" required>
+                    <input type="text" id="articleAuthor" placeholder="Firma dell'autore" required>
+                    <textarea id="articleContent" placeholder="Contenuto articolo..." rows="10" required></textarea>
+                    
+                    <div class="form-group">
+                        <label for="articleFile">Allega file (immagini, PDF, ecc):</label>
+                        <input type="file" id="articleFile">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">Pubblica</button>
+                        <button type="button" class="btn btn-secondary" id="cancelArticleBtn">Annulla</button>
+                    </div>
+                </form>
+                <div id="articleError" class="error-message" style="display:none;"></div>
+                <div id="articleSuccess" class="success-message" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="container">
+            <section id="articlesSection" class="articles">
+                <h2>Ultimi Articoli</h2>
+                <div id="articlesList" class="articles-grid">
+                    <!-- Gli articoli verranno inseriti qui -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Article Detail Modal -->
+        <div id="articleDetailModal" class="modal">
+            <div class="modal-content-large">
+                <span class="close">&times;</span>
+                <article id="articleDetail" class="article-full">
+                    <h2 id="detailTitle"></h2>
+                    <div class="article-meta">
+                        <span id="detailAuthor"></span>
+                        <span id="detailDate"></span>
+                    </div>
+                    <div id="detailContent"></div>
+                    <div id="detailAttachment" style="margin-top: 20px;"></div>
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                        <button id="deleteArticleBtn" class="btn btn-danger" style="display: none;">🗑️ Elimina Articolo</button>
+                    </div>
+                </article>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <p>Perugia247 &copy; 2026 | Creato da <strong>Ilaria Vocale</strong> e <strong>Raffaele Coco</strong></p>
+                <a href="#" id="configBtn">Configurazione Firebase</a>
+            </div>
+        </footer>
+
+        <!-- Config Modal -->
+        <div id="configModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Configurazione Firebase</h2>
+                <form id="configForm">
+                    <input type="text" id="apiKey" placeholder="API Key" required>
+                    <input type="text" id="authDomain" placeholder="Auth Domain" required>
+                    <input type="text" id="projectId" placeholder="Project ID" required>
+                    <input type="text" id="storageBucket" placeholder="Storage Bucket" required>
+                    <input type="text" id="messagingSenderId" placeholder="Messaging Sender ID" required>
+                    <input type="text" id="appId" placeholder="App ID" required>
+                    <button type="submit" class="btn btn-primary">Salva Configurazione</button>
+                </form>
+                <div id="configError" class="error-message" style="display:none;"></div>
+                <div id="configSuccess" class="success-message" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK (Compat - Legacy) -->
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-storage-compat.js"></script>
+
+    <!-- Configurazione Firebase (opzionale - leggi da config.js se esiste) -->
+    <script src="config.js" onload="console.log('✓ Firebase config caricato')" onerror="console.log('ℹ️ config.js non trovato - usa configurazione UI')"></script>
+
+    <script src="app.js"></script>
+</body>
+</html>

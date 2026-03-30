@@ -1,0 +1,34 @@
+{
+  "name": "perugia247-news",
+  "version": "1.0.0",
+  "description": "Sito di news locale per Perugia",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server -p 8080",
+    "build": "echo 'App is ready to deploy'",
+    "deploy-firebase": "firebase deploy"
+  },
+  "keywords": [
+    "news",
+    "perugia",
+    "firebase",
+    "local-news"
+  ],
+  "authors": [
+    {
+      "name": "Ilaria Vocale"
+    },
+    {
+      "name": "Raffaele Coco"
+    }
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "firebase-tools": "^12.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/perugia247/website"
+  }
+}
