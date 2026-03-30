@@ -6,6 +6,16 @@ let auth = null;
 let database = null;
 let storage = null;
 
+const DEFAULT_PUBLIC_FIREBASE_CONFIG = {
+    apiKey: "AIzaSyDax3-gM-jSuqaT-gjUrhZpd3h8ZDbRqoY",
+    authDomain: "perugia247-d8ed2.firebaseapp.com",
+    databaseURL: "https://perugia247-d8ed2-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "perugia247-d8ed2",
+    storageBucket: "perugia247-d8ed2.firebasestorage.app",
+    messagingSenderId: "684669568391",
+    appId: "1:684669568391:web:f03c9dda51c17188647f22"
+};
+
 // Elementi DOM
 const loginModal = document.getElementById('loginModal');
 const articleModal = document.getElementById('articleModal');
@@ -30,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Carica configurazione Firebase
-// Priorità: 1) FIREBASE_CONFIG globale (da config.js), 2) localStorage, 3) niente
+// Priorità: 1) FIREBASE_CONFIG globale (da config.js), 2) localStorage, 3) default pubblico
 function loadFirebaseConfig() {
     // Prova prima globale FIREBASE_CONFIG (da config.js)
     if (typeof FIREBASE_CONFIG !== 'undefined') {
@@ -47,12 +57,15 @@ function loadFirebaseConfig() {
             firebaseConfig = JSON.parse(savedConfig);
             console.log('✓ Firebase config caricato da localStorage');
             initializeFirebase();
+            return;
         } catch (e) {
             console.log('Firebase non configurato. Configurare prima di usare.');
         }
-    } else {
-        console.log('ℹ️ Firebase non configurato. Clicca su "Configurazione Firebase" per configurare.');
     }
+
+    firebaseConfig = DEFAULT_PUBLIC_FIREBASE_CONFIG;
+    console.log('✓ Firebase config caricato dal fallback pubblico');
+    initializeFirebase();
 }
 
 // Inizializza Firebase
