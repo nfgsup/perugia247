@@ -152,7 +152,12 @@ async function handleLogin(e) {
     e.preventDefault();
     
     if (!firebaseConfig) {
-        showMessage('loginError', 'Firebase non è configurato. Configura prima nella sezione Admin.');
+        firebaseConfig = DEFAULT_PUBLIC_FIREBASE_CONFIG;
+        initializeFirebase();
+    }
+
+    if (!auth) {
+        showMessage('loginError', 'Firebase non inizializzato. Ricarica la pagina e riprova.');
         return;
     }
 
