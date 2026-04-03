@@ -5,6 +5,8 @@ let currentUser = null;
 let auth = null;
 let database = null;
 let storage = null;
+let allArticles = []; // Cache di tutti gli articoli per la sidebar
+let currentArticleId = null; // ID dell'articolo attualmente visualizzato
 
 const DEFAULT_PUBLIC_FIREBASE_CONFIG = {
     apiKey: "AIzaSyDax3-gM-jSuqaT-gjUrhZpd3h8ZDbRqoY",
@@ -41,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initDarkMode();
     initImagePreview();
     initScrollAnimations();
+    initSidebarToggle();
 });
 
 // Carica configurazione Firebase
@@ -338,6 +341,9 @@ async function loadArticles() {
                 });
             });
 
+            // Save to global cache for sidebar
+            allArticles = articles;
+
             if (articles.length === 0) {
                 articlesList.innerHTML = '<div class="empty-state"><h3>📭 Non ci sono articoli ancora</h3><p>Effettua il login e crea il primo articolo!</p></div>';
                 return;
@@ -421,6 +427,9 @@ function createArticleCardOld(article) {
 // Visualizza articolo completo
 async function showArticleDetail(articleId, article) {
     try {
+        // Store current article ID
+        currentArticleId = articleId;
+        
         // If article not passed, fetch it
         if (!article) {
             const snapshot = await database.ref('articles/' + articleId).once('value');
@@ -440,6 +449,23 @@ async function showArticleDetail(articleId, article) {
             hour: '2-digit',
             minute: '2-digit'
         });
+
+        // Badges in detail view
+        const detailBadges = document.getElementById('detailBadges');
+        if (detailBadges) {
+            const badges = [];
+            if (article.isBreaking) {
+                badges.push('<span class="badge badge-breaking">🔴 BREAKING NEWS</span>');
+            }
+            if (article.isFeatured) {
+                badges.push('<span class="badge badge-featured">⭐ IN EVIDENZA</span>');
+            }
+            if (article.category) {
+                const emoji = getCategoryEmoji(article.category);
+                badges.push(`<span class="badge badge-category">${emoji} ${article.category.toUpperCase()}</span>`);
+            }
+            detailBadges.innerHTML = badges.join('');
+        }
 
         document.getElementById('detailTitle').textContent = article.title;
         const subtitleElement = document.getElementById('detailSubtitle');
@@ -485,6 +511,15 @@ async function showArticleDetail(articleId, article) {
             deleteBtn.onclick = () => deleteArticle(articleId, article);
         } else {
             deleteBtn.style.display = 'none';
+        }
+
+        // Populate sidebar with all articles
+        populateSidebar(articleId);
+
+        // Scroll to top of reader
+        const readerMain = document.querySelector('.reader-main');
+        if (readerMain) {
+            readerMain.scrollTop = 0;
         }
 
         openModal(articleDetailModal);
@@ -630,6 +665,17 @@ function openModal(modal) {
 
 function closeModal(modal) {
     modal.classList.remove('show');
+    
+    // Reset sidebar if closing article reader
+    if (modal === articleDetailModal) {
+        const sidebar = document.querySelector('.reader-sidebar');
+        if (sidebar) {
+            sidebar.classList.remove('show');
+            sidebar.classList.remove('collapsed');
+        }
+        currentArticleId = null;
+    }
+    
     // Pulisci eventuali messaggi di errore
     const errors = modal.querySelectorAll('.error-message');
     const successes = modal.querySelectorAll('.success-message');
@@ -828,6 +874,9 @@ function createArticleCard(article, articleId) {
         card.classList.add('featured-card');
     }
     
+    // Store article ID for later use
+    card.dataset.articleId = articleId;
+    
     // Image
     let imageHtml = '';
     if (article.attachmentUrl && article.attachmentUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
@@ -883,5 +932,140 @@ function createArticleCard(article, articleId) {
     }
     
     return card;
+}
+
+// Sidebar Toggle
+function initSidebarToggle() {
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const sidebar = document.querySelector('.reader-sidebar');
+    
+    if (toggleBtn && sidebar) {
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+        });
+    }
+    
+    // Mobile toggle - create if needed
+    if (window.innerWidth <= 968) {
+        createMobileSidebarToggle();
+    }
+    
+    window.addEventListener('resize', () => {
+        if (window.innerWidth <= 968) {
+            createMobileSidebarToggle();
+        } else {
+            const mobileToggle = document.getElementById('mobileSidebarToggle');
+            if (mobileToggle) mobileToggle.remove();
+        }
+    });
+}
+
+function createMobileSidebarToggle() {
+    if (document.getElementById('mobileSidebarToggle')) return;
+    
+    const btn = document.createElement('button');
+    btn.id = 'mobileSidebarToggle';
+    btn.className = 'btn-toggle-sidebar-mobile';
+    btn.innerHTML = '📚';
+    btn.title = 'Mostra articoli';
+    
+    btn.addEventListener('click', () => {
+        const sidebar = document.querySelector('.reader-sidebar');
+        sidebar.classList.toggle('show');
+    });
+    
+    document.body.appendChild(btn);
+}
+
+// Populate sidebar with articles
+function populateSidebar(currentId) {
+    if (allArticles.length === 0) return;
+    
+    const breakingArticles = allArticles.filter(a => a.isBreaking);
+    const featuredArticles = allArticles.filter(a => a.isFeatured && !a.isBreaking);
+    const regularArticles = allArticles.filter(a => !a.isBreaking && !a.isFeatured);
+    
+    // Breaking
+    const sidebarBreaking = document.getElementById('sidebarBreaking');
+    const sidebarBreakingList = document.getElementById('sidebarBreakingList');
+    if (breakingArticles.length > 0) {
+        sidebarBreakingList.innerHTML = '';
+        breakingArticles.forEach(article => {
+            sidebarBreakingList.appendChild(createSidebarArticleItem(article, article.id, currentId));
+        });
+        sidebarBreaking.style.display = 'block';
+    } else {
+        sidebarBreaking.style.display = 'none';
+    }
+    
+    // Featured
+    const sidebarFeatured = document.getElementById('sidebarFeatured');
+    const sidebarFeaturedList = document.getElementById('sidebarFeaturedList');
+    if (featuredArticles.length > 0) {
+        sidebarFeaturedList.innerHTML = '';
+        featuredArticles.forEach(article => {
+            sidebarFeaturedList.appendChild(createSidebarArticleItem(article, article.id, currentId));
+        });
+        sidebarFeatured.style.display = 'block';
+    } else {
+        sidebarFeatured.style.display = 'none';
+    }
+    
+    // Regular
+    const sidebarArticlesList = document.getElementById('sidebarArticlesList');
+    sidebarArticlesList.innerHTML = '';
+    regularArticles.slice(0, 15).forEach(article => {
+        sidebarArticlesList.appendChild(createSidebarArticleItem(article, article.id, currentId));
+    });
+}
+
+// Create sidebar article item
+function createSidebarArticleItem(article, articleId, currentId) {
+    const item = document.createElement('div');
+    item.className = 'sidebar-article-item';
+    if (articleId === currentId) {
+        item.classList.add('active');
+    }
+    
+    // Badges
+    let badgesHtml = '';
+    const badges = [];
+    if (article.isBreaking) {
+        badges.push('<span class="badge badge-breaking">🔴 BREAKING</span>');
+    }
+    if (article.isFeatured) {
+        badges.push('<span class="badge badge-featured">⭐</span>');
+    }
+    if (article.category) {
+        const emoji = getCategoryEmoji(article.category);
+        badges.push(`<span class="badge badge-category">${emoji}</span>`);
+    }
+    if (badges.length > 0) {
+        badgesHtml = `<div class="sidebar-badges">${badges.join('')}</div>`;
+    }
+    
+    const date = new Date(article.createdAt).toLocaleDateString('it-IT', {
+        day: 'numeric',
+        month: 'short'
+    });
+    
+    item.innerHTML = `
+        ${badgesHtml}
+        <h5>${escapeHtml(article.title)}</h5>
+        <div class="sidebar-meta">
+            <span class="sidebar-author">${escapeHtml(article.author)}</span>
+            <span>${date}</span>
+        </div>
+    `;
+    
+    item.addEventListener('click', () => {
+        showArticleDetail(articleId, article);
+        // Close sidebar on mobile
+        if (window.innerWidth <= 968) {
+            document.querySelector('.reader-sidebar').classList.remove('show');
+        }
+    });
+    
+    return item;
 }
 

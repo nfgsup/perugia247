@@ -155,21 +155,59 @@
 
         <!-- Article Detail Modal -->
         <div id="articleDetailModal" class="modal">
-            <div class="modal-content-full">
-                <span class="close">&times;</span>
-                <article id="articleDetail" class="article-full">
-                    <h2 id="detailTitle"></h2>
-                    <h3 id="detailSubtitle" class="article-subtitle"></h3>
-                    <div class="article-meta">
-                        <span id="detailAuthor"></span>
-                        <span id="detailDate"></span>
+            <div class="modal-content-reader">
+                <span class="close" id="closeReader">&times;</span>
+                
+                <!-- Main Reader Layout -->
+                <div class="reader-layout">
+                    <!-- Article Content (Left) -->
+                    <div class="reader-main">
+                        <article id="articleDetail" class="article-full">
+                            <div class="article-badges-detail" id="detailBadges"></div>
+                            <h2 id="detailTitle"></h2>
+                            <h3 id="detailSubtitle" class="article-subtitle"></h3>
+                            <div class="article-meta">
+                                <span id="detailAuthor"></span>
+                                <span id="detailDate"></span>
+                            </div>
+                            <div id="detailContent"></div>
+                            <div id="detailAttachment" style="margin-top: 20px;"></div>
+                            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.1);">
+                                <button id="deleteArticleBtn" class="btn btn-danger" style="display: none;">🗑️ Elimina Articolo</button>
+                            </div>
+                        </article>
                     </div>
-                    <div id="detailContent"></div>
-                    <div id="detailAttachment" style="margin-top: 20px;"></div>
-                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-                        <button id="deleteArticleBtn" class="btn btn-danger" style="display: none;">🗑️ Elimina Articolo</button>
-                    </div>
-                </article>
+
+                    <!-- Sidebar (Right) -->
+                    <aside class="reader-sidebar">
+                        <div class="sidebar-header">
+                            <h3>📚 Altri Articoli</h3>
+                            <button id="toggleSidebar" class="btn-toggle-sidebar" title="Nascondi sidebar">
+                                ◀
+                            </button>
+                        </div>
+                        
+                        <div class="sidebar-sections">
+                            <!-- Breaking News in Sidebar -->
+                            <div class="sidebar-section" id="sidebarBreaking" style="display: none;">
+                                <h4 class="sidebar-section-title">🔴 Breaking News</h4>
+                                <div id="sidebarBreakingList" class="sidebar-articles-list"></div>
+                            </div>
+
+                            <!-- Featured in Sidebar -->
+                            <div class="sidebar-section" id="sidebarFeatured" style="display: none;">
+                                <h4 class="sidebar-section-title">⭐ In Evidenza</h4>
+                                <div id="sidebarFeaturedList" class="sidebar-articles-list"></div>
+                            </div>
+
+                            <!-- Regular Articles in Sidebar -->
+                            <div class="sidebar-section">
+                                <h4 class="sidebar-section-title">📋 Ultimi Articoli</h4>
+                                <div id="sidebarArticlesList" class="sidebar-articles-list"></div>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
             </div>
         </div>
 
