@@ -1,10 +1,40 @@
-# Perugia247 - News Website
+# Perugia247 - Piattaforma News Ultra-Moderna 📰✨
 
-Un sito di news locale creato da **Ilaria Vocale** e **Raffaele Coco**.
+Un sito di news locale creato da **Ilaria Vocale** e **Raffaele Coco**, completamente rinnovato con design professionale accattivante!
 
-## Caratteristiche
+## 🔥 Caratteristiche Principali
 
-✨ **Editor di articoli** - Interfaccia user-friendly per creare articoli
+### 🚨 Breaking News System
+- **Banner rosso lampeggiante** con ticker animato scorrevole
+- **Badge "🔴 BREAKING"** sulle notizie urgenti  
+- **Sezione dedicata** con evidenziazione speciale
+- **Pulse animations** per attirare l'attenzione
+
+### ⭐ Design Ultra-Moderno
+- **Gradients dinamici** ovunque (stile CNN/BBC)
+- **Glassmorphism** e ombre avanzate
+- **Animazioni smooth** su scroll (fade in, slide up)
+- **Skeleton loaders** durante caricamento
+- **Hover effects accattivanti** con ripple
+- **Dark Mode toggle** 🌙 persistente
+- **Responsive mobile-first** design
+
+### 📂 Sistema Categorie & Organizzazione
+- **6 categorie** con emoji colorate:
+  - 📰 Generale | 🏛️ Politica | 🚨 Cronaca
+  - ⚽ Sport | 🎭 Cultura | 💼 Economia
+- **Articoli In Evidenza** con badge dorato ⭐
+- **3 sezioni** separate: Breaking, Featured, Articoli Regolari
+- **Badge visivi** per identificazione rapida
+
+### 🖼️ Gestione Media Avanzata
+- **Preview immagini** in tempo reale durante upload
+- **Immagini featured** automatiche in cima agli articoli  
+- Supporto **immagini, PDF, documenti**
+- **Icone fancy** per download
+- **Lightbox** per visualizzazione ottimizzata
+
+### ✨ Editor di articoli - Interfaccia user-friendly per creare articoli
 📱 **Responsive Design** - Funziona perfettamente su dispositivi mobili
 🔐 **Autenticazione** - Sistema di login sicuro con Firebase
 📎 **Allegati** - Aggiungi immagini, PDF e altri file ai tuoi articoli

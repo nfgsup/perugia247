@@ -8,15 +8,28 @@
 </head>
 <body>
     <div id="app">
+        <!-- Breaking News Ticker -->
+        <div id="breakingNewsTicker" class="breaking-ticker" style="display: none;">
+            <div class="breaking-label">🔴 BREAKING</div>
+            <div class="ticker-content">
+                <span id="tickerText"></span>
+            </div>
+        </div>
+
         <!-- Navbar -->
         <nav class="navbar">
             <div class="container">
                 <div class="navbar-brand">
-                    <h1 class="logo">Perugia247</h1>
+                    <h1 class="logo">
+                        <span class="logo-icon">📰</span>
+                        Perugia<span class="logo-accent">247</span>
+                    </h1>
+                    <p class="tagline">Notizie in tempo reale</p>
                 </div>
                 <div class="navbar-menu">
+                    <button id="darkModeToggle" class="btn btn-ghost" title="Toggle Dark Mode">🌙</button>
                     <button id="loginBtn" class="btn btn-primary">Login</button>
-                    <button id="newArticleBtn" class="btn btn-success" style="display:none;">Nuovo Articolo</button>
+                    <button id="newArticleBtn" class="btn btn-success" style="display:none;">➕ Nuovo Articolo</button>
                     <button id="logoutBtn" class="btn btn-danger" style="display:none;">Logout</button>
                 </div>
             </div>
@@ -45,6 +58,32 @@
                     <input type="text" id="articleTitle" placeholder="Titolo articolo" required>
                     <input type="text" id="articleSubtitle" placeholder="Sottotitolo (opzionale)">
                     <input type="text" id="articleAuthor" placeholder="Firma dell'autore" required>
+                    
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="isBreaking">
+                            <span>🔴 Contrassegna come Breaking News</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="isFeatured">
+                            <span>⭐ Articolo in evidenza</span>
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="articleCategory">Categoria:</label>
+                        <select id="articleCategory">
+                            <option value="generale">📰 Generale</option>
+                            <option value="politica">🏛️ Politica</option>
+                            <option value="cronaca">🚨 Cronaca</option>
+                            <option value="sport">⚽ Sport</option>
+                            <option value="cultura">🎭 Cultura</option>
+                            <option value="economia">💼 Economia</option>
+                        </select>
+                    </div>
 
                     <div class="editor-toolbar" id="editorToolbar">
                         <button type="button" data-command="bold"><strong>B</strong></button>
@@ -60,8 +99,12 @@
                     <div id="articleContent" class="editor-content" contenteditable="true" data-placeholder="Contenuto articolo..."></div>
                     
                     <div class="form-group">
-                        <label for="articleFile">Allega file (immagini, PDF, ecc):</label>
-                        <input type="file" id="articleFile">
+                        <label for="articleFile">🖼️ Immagine/Allegato principale:</label>
+                        <input type="file" id="articleFile" accept="image/*,application/pdf,.doc,.docx">
+                        <div id="imagePreview" class="image-preview" style="display: none;">
+                            <img id="previewImg" alt="Preview">
+                            <button type="button" id="removePreview" class="btn-remove">✕</button>
+                        </div>
                     </div>
 
                     <div class="form-actions">
@@ -76,8 +119,34 @@
 
         <!-- Main Content -->
         <main class="container">
+            <!-- Breaking News Section -->
+            <section id="breakingSection" class="breaking-section" style="display: none;">
+                <div class="section-header">
+                    <h2 class="breaking-title">
+                        <span class="pulse-dot"></span>
+                        Breaking News
+                    </h2>
+                </div>
+                <div id="breakingNewsList" class="breaking-grid">
+                    <!-- Breaking news cards -->
+                </div>
+            </section>
+
+            <!-- Featured News -->
+            <section id="featuredSection" class="featured-section" style="display: none;">
+                <div class="section-header">
+                    <h2>⭐ In Evidenza</h2>
+                </div>
+                <div id="featuredList" class="featured-grid">
+                    <!-- Featured articles -->
+                </div>
+            </section>
+
+            <!-- Regular Articles -->
             <section id="articlesSection" class="articles">
-                <h2>Ultimi Articoli</h2>
+                <div class="section-header">
+                    <h2>📋 Ultimi Articoli</h2>
+                </div>
                 <div id="articlesList" class="articles-grid">
                     <!-- Gli articoli verranno inseriti qui -->
                 </div>

@@ -38,6 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
     loadFirebaseConfig();
     setupEventListeners();
     setupEditorToolbar();
+    initDarkMode();
+    initImagePreview();
+    initScrollAnimations();
 });
 
 // Carica configurazione Firebase
@@ -109,6 +112,12 @@ function setupEventListeners() {
     newArticleBtn.addEventListener('click', () => openModal(articleModal));
     articleForm.addEventListener('submit', handleCreateArticle);
     document.getElementById('cancelArticleBtn').addEventListener('click', () => closeModal(articleModal));
+
+    // Dark Mode Toggle
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+    }
 
     // Configurazione Firebase
     configBtn.addEventListener('click', () => {
@@ -207,6 +216,9 @@ async function handleCreateArticle(e) {
     const contentHtml = contentEditor.innerHTML.trim();
     const contentText = contentEditor.innerText.trim();
     const fileInput = document.getElementById('articleFile');
+    const isBreaking = document.getElementById('isBreaking').checked;
+    const isFeatured = document.getElementById('isFeatured').checked;
+    const category = document.getElementById('articleCategory').value;
 
     if (!contentText) {
         showMessage('articleError', 'Inserisci il contenuto dell\'articolo');
@@ -214,7 +226,7 @@ async function handleCreateArticle(e) {
     }
 
     try {
-        showMessage('articleSuccess', 'Pubblicazione in corso...');
+        showMessage('articleSuccess', '⏳ Pubblicazione in corso...');
 
         const articleData = {
             title: title,
@@ -225,7 +237,10 @@ async function handleCreateArticle(e) {
             createdBy: currentUser.email,
             createdAt: new Date().toISOString(),
             attachmentUrl: null,
-            attachmentName: null
+            attachmentName: null,
+            isBreaking: isBreaking,
+            isFeatured: isFeatured,
+            category: category
         };
 
         // Carica file se presente (solo se Storage è abilitato)
@@ -285,6 +300,9 @@ async function handleCreateArticle(e) {
         showMessage('articleSuccess', 'Articolo pubblicato con successo!');
         articleForm.reset();
         contentEditor.innerHTML = '';
+        document.getElementById('isBreaking').checked = false;
+        document.getElementById('isFeatured').checked = false;
+        document.getElementById('imagePreview').style.display = 'none';
         closeModal(articleModal);
         loadArticles();
     } catch (error) {
@@ -301,7 +319,15 @@ async function loadArticles() {
     }
 
     try {
-        articlesList.innerHTML = '<div class="loading"><div class="spinner"></div>Caricamento articoli...</div>';
+        // Show skeleton loaders
+        articlesList.innerHTML = Array(6).fill(0).map(() => `
+            <div class="skeleton-card">
+                <div class="skeleton skeleton-image"></div>
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text"></div>
+            </div>
+        `).join('');
 
         database.ref('articles').orderByChild('createdAt').limitToLast(50).once('value', snapshot => {
             const articles = [];
@@ -313,15 +339,53 @@ async function loadArticles() {
             });
 
             if (articles.length === 0) {
-                articlesList.innerHTML = '<div class="empty-state"><h3>Non ci sono articoli ancora</h3><p>Effettua il login e crea il primo articolo!</p></div>';
+                articlesList.innerHTML = '<div class="empty-state"><h3>📭 Non ci sono articoli ancora</h3><p>Effettua il login e crea il primo articolo!</p></div>';
                 return;
             }
 
+            // Separate articles by type
+            const breakingArticles = articles.filter(a => a.isBreaking);
+            const featuredArticles = articles.filter(a => a.isFeatured && !a.isBreaking);
+            const regularArticles = articles.filter(a => !a.isBreaking && !a.isFeatured);
+
+            // Update breaking news ticker
+            updateBreakingTicker(breakingArticles);
+
+            // Breaking News Section
+            const breakingSection = document.getElementById('breakingSection');
+            const breakingList = document.getElementById('breakingNewsList');
+            if (breakingArticles.length > 0) {
+                breakingList.innerHTML = '';
+                breakingArticles.forEach(article => {
+                    breakingList.appendChild(createArticleCard(article, article.id));
+                });
+                breakingSection.style.display = 'block';
+            } else {
+                breakingSection.style.display = 'none';
+            }
+
+            // Featured Section
+            const featuredSection = document.getElementById('featuredSection');
+            const featuredList = document.getElementById('featuredList');
+            if (featuredArticles.length > 0) {
+                featuredList.innerHTML = '';
+                featuredArticles.forEach(article => {
+                    featuredList.appendChild(createArticleCard(article, article.id));
+                });
+                featuredSection.style.display = 'block';
+            } else {
+                featuredSection.style.display = 'none';
+            }
+
+            // Regular Articles
             articlesList.innerHTML = '';
-            articles.forEach(article => {
-                const articleCard = createArticleCard(article);
-                articlesList.appendChild(articleCard);
-            });
+            if (regularArticles.length === 0) {
+                articlesList.innerHTML = '<div class="empty-state"><p>Nessun articolo regolare al momento</p></div>';
+            } else {
+                regularArticles.forEach(article => {
+                    articlesList.appendChild(createArticleCard(article, article.id));
+                });
+            }
         });
     } catch (error) {
         console.error('Load articles error:', error);
@@ -329,8 +393,8 @@ async function loadArticles() {
     }
 }
 
-// Crea card articolo
-function createArticleCard(article) {
+// Crea card articolo (vecchia versione - ora sostituita dalla nuova createArticleCard più sotto)
+function createArticleCardOld(article) {
     const card = document.createElement('div');
     card.className = 'article-card';
 
@@ -355,10 +419,13 @@ function createArticleCard(article) {
 }
 
 // Visualizza articolo completo
-async function viewArticle(articleId) {
+async function showArticleDetail(articleId, article) {
     try {
-        const snapshot = await database.ref('articles/' + articleId).once('value');
-        const article = snapshot.val();
+        // If article not passed, fetch it
+        if (!article) {
+            const snapshot = await database.ref('articles/' + articleId).once('value');
+            article = snapshot.val();
+        }
 
         if (!article) {
             alert('Articolo non trovato');
@@ -382,19 +449,28 @@ async function viewArticle(articleId) {
         document.getElementById('detailDate').textContent = formattedDate;
 
         const detailContent = document.getElementById('detailContent');
+        
+        // Add featured image if available
+        let imageHtml = '';
+        if (article.attachmentUrl && article.attachmentUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+            imageHtml = `<img src="${article.attachmentUrl}" alt="${escapeHtml(article.title)}" class="article-full-image">`;
+        }
+        
         if (article.contentHtml) {
-            detailContent.innerHTML = sanitizeHtml(article.contentHtml);
+            detailContent.innerHTML = imageHtml + sanitizeHtml(article.contentHtml);
         } else {
-            detailContent.textContent = article.content || '';
+            detailContent.innerHTML = imageHtml;
+            const textNode = document.createTextNode(article.content || '');
+            detailContent.appendChild(textNode);
         }
 
-        // Mostra allegato se presente
+        // Mostra allegato se presente (e non è un'immagine già mostrata)
         const attachmentDiv = document.getElementById('detailAttachment');
-        if (article.attachmentUrl) {
+        if (article.attachmentUrl && !article.attachmentUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
             attachmentDiv.innerHTML = `
-                <strong>Allegato:</strong><br>
+                <strong>📎 Allegato:</strong><br>
                 <a href="${article.attachmentUrl}" target="_blank" download="${article.attachmentName}">
-                    📎 ${escapeHtml(article.attachmentName)}
+                    📥 Scarica: ${escapeHtml(article.attachmentName)}
                 </a>
             `;
             attachmentDiv.style.display = 'block';
@@ -416,6 +492,11 @@ async function viewArticle(articleId) {
         console.error('View article error:', error);
         alert('Errore nel caricamento dell\'articolo');
     }
+}
+
+// Keep old function name for backward compatibility
+async function viewArticle(articleId) {
+    return showArticleDetail(articleId);
 }
 
 function setupEditorToolbar() {
@@ -626,3 +707,181 @@ function sanitizeHtml(inputHtml) {
 
     return doc.body.innerHTML;
 }
+
+// Dark Mode Functions
+function initDarkMode() {
+    const isDarkMode = localStorage.getItem('darkMode') === 'true';
+    if (isDarkMode) {
+        document.body.classList.add('dark-mode');
+        updateDarkModeIcon(true);
+    }
+}
+
+function toggleDarkMode() {
+    const isDark = document.body.classList.toggle('dark-mode');
+    localStorage.setItem('darkMode', isDark);
+    updateDarkModeIcon(isDark);
+}
+
+function updateDarkModeIcon(isDark) {
+    const toggle = document.getElementById('darkModeToggle');
+    if (toggle) {
+        toggle.textContent = isDark ? '☀️' : '🌙';
+    }
+}
+
+// Image Preview Functions
+function initImagePreview() {
+    const fileInput = document.getElementById('articleFile');
+    const preview = document.getElementById('imagePreview');
+    const previewImg = document.getElementById('previewImg');
+    const removeBtn = document.getElementById('removePreview');
+
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    previewImg.src = ev.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+    }
+
+    if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+            fileInput.value = '';
+            preview.style.display = 'none';
+            previewImg.src = '';
+        });
+    }
+}
+
+// Scroll Animations
+function initScrollAnimations() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    // Observe article cards when they're created
+    window.observeArticleCard = (card) => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(20px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(card);
+    };
+}
+
+// Breaking News Ticker
+function updateBreakingTicker(articles) {
+    const ticker = document.getElementById('breakingNewsTicker');
+    const tickerText = document.getElementById('tickerText');
+    
+    const breakingArticles = articles.filter(a => a.isBreaking);
+    
+    if (breakingArticles.length > 0) {
+        const titles = breakingArticles.map(a => a.title).join(' • ');
+        tickerText.textContent = titles;
+        ticker.style.display = 'flex';
+    } else {
+        ticker.style.display = 'none';
+    }
+}
+
+// Get category emoji
+function getCategoryEmoji(category) {
+    const emojis = {
+        'generale': '📰',
+        'politica': '🏛️',
+        'cronaca': '🚨',
+        'sport': '⚽',
+        'cultura': '🎭',
+        'economia': '💼'
+    };
+    return emojis[category] || '📰';
+}
+
+// Create enhanced article card
+function createArticleCard(article, articleId) {
+    const card = document.createElement('div');
+    card.className = 'article-card';
+    
+    if (article.isBreaking) {
+        card.classList.add('breaking-card');
+    }
+    if (article.isFeatured) {
+        card.classList.add('featured-card');
+    }
+    
+    // Image
+    let imageHtml = '';
+    if (article.attachmentUrl && article.attachmentUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+        imageHtml = `<img src="${article.attachmentUrl}" alt="${escapeHtml(article.title)}" class="article-image" onerror="this.style.display='none'">`;
+    }
+    
+    // Badges
+    let badgesHtml = '';
+    const badges = [];
+    if (article.isBreaking) {
+        badges.push('<span class="badge badge-breaking">🔴 BREAKING</span>');
+    }
+    if (article.isFeatured) {
+        badges.push('<span class="badge badge-featured">⭐ IN EVIDENZA</span>');
+    }
+    if (article.category) {
+        const emoji = getCategoryEmoji(article.category);
+        badges.push(`<span class="badge badge-category">${emoji} ${article.category.toUpperCase()}</span>`);
+    }
+    if (badges.length > 0) {
+        badgesHtml = `<div class="article-badges">${badges.join('')}</div>`;
+    }
+    
+    const preview = stripHtml(article.content).substring(0, 150) + '...';
+    const date = new Date(article.createdAt).toLocaleString('it-IT', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    card.innerHTML = `
+        ${imageHtml}
+        <div class="article-content-wrapper">
+            ${badgesHtml}
+            <h3>${escapeHtml(article.title)}</h3>
+            ${article.subtitle ? `<p class="article-subtitle">${escapeHtml(article.subtitle)}</p>` : ''}
+            <div class="article-meta">
+                <span><strong>${escapeHtml(article.author)}</strong></span>
+                <span>${date}</span>
+            </div>
+            <p class="article-preview">${escapeHtml(preview)}</p>
+            <button class="btn btn-primary">Leggi tutto →</button>
+        </div>
+    `;
+    
+    card.addEventListener('click', () => showArticleDetail(articleId, article));
+    
+    // Apply scroll animation
+    if (window.observeArticleCard) {
+        window.observeArticleCard(card);
+    }
+    
+    return card;
+}
+
