@@ -2,6 +2,17 @@
 
 ## 🔥 Caratteristiche Principali
 
+### 📚 Article Reader Full Screen (NUOVO!)
+- **Layout a 2 colonne** - Articolo a sinistra, lista articoli a destra
+- **Sidebar navigabile** con tutti gli articoli
+- **3 sezioni organizzate**: Breaking News, In Evidenza, Articoli Regolari
+- **Navigazione fluida** - Clicca su un articolo nella sidebar per leggerlo senza chiudere
+- **Articolo corrente evidenziato** in sidebar
+- **Toggle sidebar** - Nascondi/mostra con un click
+- **Mobile-friendly** - Sidebar a schermo intero su mobile con floating button
+- **Badge visivi** per identificazione rapida
+- **Smooth scroll** tra gli articoli
+
 ### 🚨 Breaking News
 - **Banner lampeggiante** in cima alla pagina per breaking news
 - **Ticker scorrevole animato** con le ultime notizie
@@ -65,6 +76,18 @@ Scegli tra 6 categorie colorate:
 
 ## 🚀 Come Usare le Nuove Funzionalità
 
+### Navigare tra Articoli con il Reader
+1. Clicca su un articolo per aprirlo
+2. **La sidebar a destra** mostra tutti gli altri articoli
+3. Clicca su qualsiasi articolo nella sidebar per leggerlo
+4. L'articolo corrente è **evidenziato** in giallo
+5. Su mobile, usa il **floating button 📚** per aprire la sidebar
+
+### Nascondere la Sidebar
+1. Clicca sul pulsante **◀** in alto a destra della sidebar
+2. La sidebar si nasconde lasciando più spazio per leggere
+3. Clicca di nuovo per mostrarla
+
 ### Creare un Breaking News
 1. Clicca su **"+ Nuovo Articolo"**
 2. Spunta **"🔴 Contrassegna come Breaking News"**
@@ -83,18 +106,25 @@ Scegli tra 6 categorie colorate:
 3. La preferenza viene salvata automaticamente
 
 ## 🎯 Migliorie Tecniche
-- **Scroll animations** con Intersection Observer
-- **CSS Variables** per temi dinamici
-- **Modular JavaScript** functions
-- **Responsive grid** con CSS Grid
-- **Performance optimized** con lazy loading visuale
+- **Article cache** per navigazione istantanea
+- **Smooth scroll** in reader e sidebar
+- **Active state management** per articolo corrente
+- **Responsive layout** con breakpoints ottimizzati
+- **Touch-optimized** per dispositivi mobili
+- **Keyboard navigation** ready
+- **Auto-reset** sidebar su chiusura modal
+- **Lazy loading** visuale con Intersection Observer
 
 ## 📊 Statistiche Design
-- **12+ animazioni** CSS
+- **1,494 righe CSS** (+279 da versione precedente)
+- **1,071 righe JavaScript** (+184)
+- **253 righe HTML** (+38)
+- **15+ animazioni** CSS
 - **6 categorie** colorate
 - **3 sezioni** di articoli (Breaking, Featured, Regular)
 - **Dual theme** (Light/Dark mode)
 - **100% responsive** su tutti i device
+- **Article Reader** full screen con sidebar navigabile
 
 ---
 
